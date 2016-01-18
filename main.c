@@ -7,15 +7,21 @@ int db_connected = 0;
 
 int main(int argc, char const *argv[])
 {
-	/* code */
 
   	MYSQL *conn;
    	MYSQL_RES *res;
    	MYSQL_ROW row;
+
+   	// Данные подключения к MySql
    	char *server = "localhost";
    	char *user = "root";
    	char *password = "password";
    	char *database = "db";
+   	
+	char path[] = "/sys/bus/w1/devices"; // Путь к датчикам
+
+
+
    	conn = mysql_init(NULL);
 
 	time_t t;
@@ -50,4 +56,12 @@ int db_connect(){
 
 
 }
+
+int readThempSensor(char *sensor_name){
+	sprintf(devPath, "%s/%s/w1_slave", path, dev);
+	
+	FILE *file;
+	file = fopen( file_name, "r" );
+}
+
 
