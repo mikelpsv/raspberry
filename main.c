@@ -29,8 +29,8 @@ int8_t findDevices(struct ds18b20 *d) {
     struct dirent *dirent;
   	
   	struct ds18b20 *newDev;
-    //char path[] = "/sys/bus/w1/devices";
-    char path[] = "/tmp/bus/w1/devices";    
+    char path[] = "/sys/bus/w1/devices";
+    //char path[] = "/tmp/bus/w1/devices";    
     int8_t i = 0;
     
     dir = opendir(path);
