@@ -6,6 +6,26 @@
 #include <string.h>
 #include <signal.h>
 
+extern int connectDb();
+#include <mysql.h>
+
+
+int connectDb(){
+  	MYSQL *conn;
+   	MYSQL_RES *res;
+   	MYSQL_ROW row;
+
+   	char *server = "localhost";
+   	char *user = "root";
+   	char *password = "password";
+   	char *database = "1111";
+
+	conn = mysql_init(NULL);
+
+	mysql_real_connect(conn, server,
+        user, password, database, 0, NULL, 0);
+}
+
 // Flag used by handler - changed to 0 when user presses Ctrl-C
 // Loop that reads & records temperatures keeps running when
 // keepRunning = 1
@@ -101,6 +121,8 @@ int main (void) {
 	signal(SIGINT, intHandler);
 	struct ds18b20 *rootNode;
 	struct ds18b20 *devNode;
+
+//	connectDb();
 
 	// Handler sets keepRunning to 0 when user presses Ctrl-C
 	// When Ctrl-C is pressed, complete current cycle of readings,

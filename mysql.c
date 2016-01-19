@@ -9,12 +9,12 @@ int connectDb(){
    	char *server = "localhost";
    	char *user = "root";
    	char *password = "password";
-   	char *database = "db";
+   	char *database = "1111";
 
-	conn = mysql_init(NULL);
+	conn = mysql_init();
 
 	mysql_real_connect(conn, server,
-        user, password, database, 0, NULL, 0)
+        user, password, database, 0, NULL, 0);
 }
 
 int writeTemp(){
