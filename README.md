@@ -1,0 +1,2 @@
+# raspberry
+requirements: lmysqlclient
