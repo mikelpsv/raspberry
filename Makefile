@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -c -I/usr/include/mysql -L/usr/lib/mysql 
+CFLAGS= -c -Wall -I/usr/include/mysql -L/usr/lib/mysql 
 BUILD=.build
 
 all: smart_sens

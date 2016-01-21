@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <mysql.h>
 #include <getopt.h>
-#include "main.h"
+#include "include/main.h"
 
 int connectDb(MYSQL *conn, char *server, char *user, char *password, char *database){
 	  if(!mysql_real_connect(conn, server,
@@ -11,25 +11,32 @@ int connectDb(MYSQL *conn, char *server, char *user, char *password, char *datab
     return 1;
 }
 
-void getVersionDb(MYSQL *conn, char *ver){
-  if(mysql_query(conn, "SELECT VERSION()") != 0)
-       perror("Error: can't execute SQL-query\n");
+int getVersionDb(MYSQL *conn, char *ver){
+  int sql_error = 0;
+
+  if(mysql_query(conn, "SELECT VERSION()") != 0){}
+    sql_error = 1;
+       //perror("Error: can't execute SQL-query\n");
 
     // Получаем дескриптор результирующей таблицы
     MYSQL_RES *res = mysql_store_result(conn);
     if(res == NULL){
-      perror("Error: can't get the result description\n");
+      sql_error = 1;
+      //perror("Error: can't get the result description\n");
     }
 
     // Получаем первую строку из результирующей таблицы
     MYSQL_ROW row = mysql_fetch_row(res);
     if(mysql_errno(conn) > 0) 
-      perror("Error: can't fetch result\n");
+      sql_error = 1;
+      //perror("Error: can't fetch result\n");
 
     strcpy(ver, row[0]);
 
     // Освобождаем память, занятую результирующей таблицей
     mysql_free_result(res);
+
+    return sql_error;
 }
 
 int writeThemp(MYSQL *conn, struct ds18b20 *d){
@@ -131,6 +138,8 @@ int writeThemp(MYSQL *conn, struct ds18b20 *d){
       if (mysql_stmt_close(sql_statement1))
         sql_error = 1;
     }
+
+    return sql_error;
 
 
 }
