@@ -1,9 +1,18 @@
 CC=gcc
+CFLAGS= -c -I/usr/include/mysql -L/usr/lib/mysql 
+BUILD=.build
 
-all: main
+all: smart_sens
 
-main:
-	gcc main.c mysql.c -o .build/smart_sens -I/usr/include/mysql -L/usr/lib/mysql -lmysqlclient
+smart_sens: main.o mysql.o
+	$(CC) $(BUILD)/main.o $(BUILD)/mysql.o -o $(BUILD)/smart_sens -lmysqlclient
+
+main.o:
+	$(CC) $(CFLAGS) main.c -o $(BUILD)/main.o
+
+mysql.o:
+	$(CC) $(CFLAGS) mysql.c -o $(BUILD)/mysql.o
+
 
 clean:
-	rm -rf *.o .build/smart_sens
+	rm -rf $(BUILD)/*.o $(BUILD)/smart_sens

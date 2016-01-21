@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <mysql.h>
 #include <getopt.h>
-#include "include/main.h"
+#include "main.h"
 
 int connectDb(MYSQL *conn, char *server, char *user, char *password, char *database){
 	  if(!mysql_real_connect(conn, server,

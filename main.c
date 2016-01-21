@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include "include/main.h"
 
+#define DEF_DELAY_W1 3
 
 // Флаг для обработки события нажатия Ctrl-C
 // keepRunning = 1
@@ -22,17 +23,19 @@ extern int optind, opterr, optopt;
 
 struct globalArgs_t {
 	int delay_w1;		// -d option
+	char *path_w1;		// -p
   	char *server;		// -S
    	char *user;			// -U
    	char *password;		// -P
    	char *database;		// -D
 } globalArgs;
 
-static const char *optString = "d:h?S:U:P:D:";
+static const char *optString = "d:p:h?S:U:P:D:";
 
 static const struct option longOpts[] = {
 	{ "help", no_argument, NULL, 'h' },
 	{ "delay_w1", required_argument, NULL, 'd' },
+	{ "path_w1", required_argument, NULL, 'p' },
 	{ "server_mysql", required_argument, NULL, 'S' },
 	{ "user_mysql", required_argument, NULL, 'U' },
 	{ "pass_mysql", required_argument, NULL, 'P' },
@@ -67,7 +70,8 @@ int main (int argc, char **argv) {
 	int longIndex 		= 0;
 
 	
-	globalArgs.delay_w1 	= 3;
+	globalArgs.delay_w1 	= DEF_DELAY_W1;
+	globalArgs.path_w1 		= "/tmp/bus/w1/devices"; //"/sys/bus/w1/devices";
 	globalArgs.server    	= "localhost";
    	globalArgs.user      	= "root";
    	globalArgs.password  	= "";
@@ -167,7 +171,7 @@ int findDevices(struct ds18b20 *d) {
     char path[] = "/tmp/bus/w1/devices";   // для отладки без устройств 
     int8_t i = 0;
     
-    dir = opendir(path);
+    dir = opendir(globalArgs.path_w1);
 	if (dir != NULL){
 		while ((dirent = readdir(dir))) {
 			// Файл должен быть ссылкой. Имя группы 28 старое, 10 новое
@@ -176,7 +180,7 @@ int findDevices(struct ds18b20 *d) {
 				newDev = malloc( sizeof(struct ds18b20) );
 	            strcpy(newDev->devID, dirent->d_name);
 	            // Assemble path to OneWire device
-	            sprintf(newDev->devPath, "%s/%s/w1_slave", path, newDev->devID);
+	            sprintf(newDev->devPath, "%s/%s/w1_slave", globalArgs.path_w1, newDev->devID);
 	            i++;
 				newDev->next = 0;
 				d->next = newDev;
