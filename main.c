@@ -9,7 +9,7 @@
 #include <getopt.h>
 #include "include/main.h"
 
-#define DEF_DELAY_W1 3
+
 
 // Флаг для обработки события нажатия Ctrl-C
 // keepRunning = 1
@@ -71,11 +71,11 @@ int main (int argc, char **argv) {
 
 	
 	globalArgs.delay_w1 	= DEF_DELAY_W1;
-	globalArgs.path_w1 		= "/tmp/bus/w1/devices"; //"/sys/bus/w1/devices";
-	globalArgs.server    	= "localhost";
-   	globalArgs.user      	= "root";
+	globalArgs.path_w1 		= DEF_PATH_DEV_W1;
+	globalArgs.server    	= DEF_MYSQL_SERVER;
+   	globalArgs.user      	= DEF_MYSQL_USER;
    	globalArgs.password  	= "";
-   	globalArgs.database  	= "smarthome";	
+   	globalArgs.database  	= DEF_MYSQL_DB;	
 
 
 	/* Process the arguments with getopt_long(), then 
@@ -236,7 +236,7 @@ void displayUsage( void )
 	puts(" smart_sens [option]\n");
 
 	puts("Параметры запуска:\n");
-	puts(" -d --delay_w1		- интервал опроса температурных датчиков 1-wire");
+	puts(" -d --delay_w1		- интервал опроса температурных датчиков 1-wire. По-умолчанию:");
 	puts(" -S --server_mysql	- адрес MySQL сервера");
 	puts(" -U --user_mysql	- пользователь MySQL сервера");
 	puts(" -P --password_mysql	- пароль пользователя MySQL сервера");
