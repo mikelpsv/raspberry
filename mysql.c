@@ -1,21 +1,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <mysql.h>
+#include <getopt.h>
 #include "include/main.h"
 
-
-
-int connectDb(MYSQL *conn){
-
-   	char *server    = "localhost";
-   	char *user      = "root";
-   	char *password  = "password";
-   	char *database  = "smarthome";
-
+int connectDb(MYSQL *conn, char *server, char *user, char *password, char *database){
 	  if(!mysql_real_connect(conn, server,
         user, password, database, 0, NULL, 0))
         return 0;
-
     return 1;
 }
 
@@ -39,7 +31,6 @@ void getVersionDb(MYSQL *conn, char *ver){
     // Освобождаем память, занятую результирующей таблицей
     mysql_free_result(res);
 }
-
 
 int writeThemp(MYSQL *conn, struct ds18b20 *d){
     MYSQL_STMT *sql_statement1;
@@ -117,10 +108,10 @@ int writeThemp(MYSQL *conn, struct ds18b20 *d){
       sql_error = 1;
 
     //----- EXECUTE THE QUERY ------
-    if (!sql_error)
-    {
+    if (!sql_error){
       if (mysql_stmt_execute(sql_statement1))
         sql_error = 1;
+
     }
 
     //If you want to get the number of affected rows
@@ -136,8 +127,7 @@ int writeThemp(MYSQL *conn, struct ds18b20 *d){
     //If you want to do the query again then change any values you want to change and call mysql_stmt_execute(sql_statement1) again
 
     //Close the statement
-    if (sql_statement1)
-    {
+    if (sql_statement1){
       if (mysql_stmt_close(sql_statement1))
         sql_error = 1;
     }

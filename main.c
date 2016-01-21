@@ -6,21 +6,159 @@
 #include <string.h>
 #include <signal.h>
 #include <mysql.h>
+#include <getopt.h>
 #include "include/main.h"
 
-// Flag used by handler - changed to 0 when user presses Ctrl-C
-// Loop that reads & records temperatures keeps running when
+
+// Флаг для обработки события нажатия Ctrl-C
 // keepRunning = 1
 int8_t volatile keepRunning = 1;
 
 
-extern int connectDb(MYSQL *conn);
+// >> Обработка параметров 
+
+extern char *optarg;
+extern int optind, opterr, optopt;
+
+struct globalArgs_t {
+	int delay_w1;		// -d option
+  	char *server;		// -S
+   	char *user;			// -U
+   	char *password;		// -P
+   	char *database;		// -D
+} globalArgs;
+
+static const char *optString = "d:h?S:U:P:D:";
+
+static const struct option longOpts[] = {
+	{ "help", no_argument, NULL, 'h' },
+	{ "delay_w1", required_argument, NULL, 'd' },
+	{ "server_mysql", required_argument, NULL, 'S' },
+	{ "user_mysql", required_argument, NULL, 'U' },
+	{ "pass_mysql", required_argument, NULL, 'P' },
+	{ "database", required_argument, NULL, 'D' },
+	{ NULL, no_argument, NULL, 0 }
+};
+
+// << Обработка параметров 
+
+extern int connectDb(MYSQL *conn, char *server, char *user, char *password, char *database);
 extern int writeThemp(MYSQL *conn, struct ds18b20 *d);
 
 
-// Find connected 1-wire devices. 1-wire driver creates entries for each device
-// in /sys/bus/w1/devices on the Raspberry Pi. Create linked list.
-int8_t findDevices(struct ds18b20 *d) {
+
+
+// Обработчик прерывания Ctrl+C
+void intHandler();
+// Поиск устройств 1-ware. Создает связвнный список структур
+int findDevices(struct ds18b20 *d);
+// Считывает данные с устройств по списку. Выводит на экран и записывает в БД
+int readTemp(struct ds18b20 *d, MYSQL* conn);
+// Вывод сообщения
+void displayUsage( void );
+
+
+int main (int argc, char **argv) {
+ 	// Intercept Ctrl-C (SIGINT) in order to finish writing data & close DB
+	signal(SIGINT, intHandler);
+
+
+	int opt 			= 0;
+	int longIndex 		= 0;
+
+	
+	globalArgs.delay_w1 	= 3;
+	globalArgs.server    	= "localhost";
+   	globalArgs.user      	= "root";
+   	globalArgs.password  	= "";
+   	globalArgs.database  	= "smarthome";	
+
+
+	/* Process the arguments with getopt_long(), then 
+	 * populate globalArgs. 
+	 */
+	opt = getopt_long( argc, argv, optString, longOpts, &longIndex );
+	while( opt != -1 ) {
+		switch( opt ) {
+			case 'd':
+				if(atoi(optarg) == 0){
+					printf("Некорректное значение параметра: %c = %s\n", opt, optarg);
+					displayUsage();
+				}else{
+					globalArgs.delay_w1 = atoi(optarg);	/* true */
+				}
+				break;
+
+			case 'S':
+				globalArgs.server = optarg;
+				break;
+			case 'U':
+				globalArgs.user = optarg;
+				break;
+			case 'P':
+				globalArgs.password = optarg;
+				break;
+			case 'D':
+				globalArgs.database = optarg;
+				break;
+
+			case 'h':
+			case '?':
+				displayUsage();
+			break;
+			default:
+				break;
+		}
+		
+		opt = getopt_long( argc, argv, optString, longOpts, &longIndex );
+	}
+
+
+	struct ds18b20 *rootNode;
+	struct ds18b20 *devNode;
+
+	MYSQL *conn = mysql_init(NULL);
+	
+	if(!connectDb(conn, globalArgs.server, globalArgs.user, globalArgs.password, globalArgs.database)){
+		printf("Ошибка подключения к MySQL серверу: %s\n", globalArgs.server);
+	}
+
+	// Handler sets keepRunning to 0 when user presses Ctrl-C
+	// When Ctrl-C is pressed, complete current cycle of readings,
+	// close DB, & exit.
+	while(keepRunning) {
+		rootNode = malloc( sizeof(struct ds18b20) );
+		devNode = rootNode;
+		// Создаем связанный список всех устройств
+		int8_t devCnt = findDevices(devNode);
+		printf("\nНайдено %d устройств:\n", devCnt);
+		
+		// Считываем информацию по каждому датчику
+		readTemp(rootNode, conn);
+		
+		// Удаляем список
+		while(rootNode) {
+	  		// Start with current value of root node
+	  		devNode = rootNode;
+	  		// Save address of next devNode to rootNode before 
+	        // deleting current devNode
+	  		rootNode = devNode->next;
+	  		// Free current devNode.
+	  		free(devNode);
+		}
+		// Now free rootNode
+		free(rootNode);
+
+		sleep(globalArgs.delay_w1);
+	}
+	mysql_close(conn);
+	
+	return EXIT_SUCCESS;
+}
+
+
+// Поиск устройств 1-ware. Создает связвнный список структур
+int findDevices(struct ds18b20 *d) {
   	DIR *dir;
     struct dirent *dirent;
   	
@@ -48,16 +186,15 @@ int8_t findDevices(struct ds18b20 *d) {
 		(void) closedir(dir);
 	
 	}else {
-		perror ("Couldn't open the w1 devices directory");
+		perror ("Невозможно открыть каталог w1 устройств");
 		return 1;
 	}
 	return i;
 }
 
 
-// Cycle through linked list of devices & take readings.
-// Print out results & store readings in DB.
-int8_t readTemp(struct ds18b20 *d, MYSQL* conn) {
+// Считывает данные с устройств по списку. Выводит на экран и записывает в БД
+int readTemp(struct ds18b20 *d, MYSQL* conn) {
 	while(d->next != NULL){
     	d = d->next;
     	int fd = open(d->devPath, O_RDONLY);
@@ -84,52 +221,24 @@ int8_t readTemp(struct ds18b20 *d, MYSQL* conn) {
   	return 0;
 }
 
-// Called when user presses Ctrl-C
 void intHandler() {
     printf("\nОстановка...\n");
     keepRunning = 0;
 }
 
-int main (int argc, char **argv) {
- 	// Intercept Ctrl-C (SIGINT) in order to finish writing data & close DB
-	signal(SIGINT, intHandler);
+void displayUsage( void )
+{
+	puts("Использование:\n");
+	puts(" smart_sens [option]\n");
 
-	struct ds18b20 *rootNode;
-	struct ds18b20 *devNode;
-
-	MYSQL *conn = mysql_init(NULL);
-
-	connectDb(conn);
-
-	// Handler sets keepRunning to 0 when user presses Ctrl-C
-	// When Ctrl-C is pressed, complete current cycle of readings,
-	// close DB, & exit.
-	while(keepRunning) {
-		rootNode = malloc( sizeof(struct ds18b20) );
-		devNode = rootNode;
-		// Создаем связанный список всех устройств
-		int8_t devCnt = findDevices(devNode);
-		printf("\nНайдено %d устройства\n\n", devCnt);
-		
-		// Считываем информацию по каждому
-		readTemp(rootNode, conn);
-		
-		// Удаляем список
-		while(rootNode) {
-	  		// Start with current value of root node
-	  		devNode = rootNode;
-	  		// Save address of next devNode to rootNode before 
-	        // deleting current devNode
-	  		rootNode = devNode->next;
-	  		// Free current devNode.
-	  		free(devNode);
-		}
-		// Now free rootNode
-		free(rootNode);
-
-		sleep(3);
-	}
-	mysql_close(conn);
-	return 0;
+	puts("Параметры запуска:\n");
+	puts(" -d --delay_w1		- интервал опроса температурных датчиков 1-wire");
+	puts(" -S --server_mysql	- адрес MySQL сервера");
+	puts(" -U --user_mysql	- пользователь MySQL сервера");
+	puts(" -P --password_mysql	- пароль пользователя MySQL сервера");
+	puts("\n");
+	exit( EXIT_FAILURE );
 }
+
+
 
