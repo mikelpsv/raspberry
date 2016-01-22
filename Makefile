@@ -4,14 +4,14 @@ BUILD=.build
 
 all: smart_sens
 
-smart_sens: main.o mysql.o
-	$(CC) $(BUILD)/main.o $(BUILD)/mysql.o -o $(BUILD)/smart_sens -lmysqlclient
+smart_sens: main.o mysqlc.o
+	$(CC) $(BUILD)/main.o $(BUILD)/mysqlc.o -o $(BUILD)/smart_sens -lmysqlclient
 
 main.o:
 	$(CC) $(CFLAGS) main.c -o $(BUILD)/main.o
 
-mysql.o:
-	$(CC) $(CFLAGS) mysql.c -o $(BUILD)/mysql.o
+mysqlc.o:
+	$(CC) $(CFLAGS) mysqlc.c -o $(BUILD)/mysqlc.o
 
 
 clean:
