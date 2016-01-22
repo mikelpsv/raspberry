@@ -2,7 +2,7 @@
 #define __MAIN_H__
 
 #define DEF_DELAY_W1 3
-#define DEF_PATH_DEV_W1 	"/tmp/bus/w1/devices"
+#define DEF_PATH_DEV_W1 	"/sys/bus/w1/devices"
 #define DEF_MYSQL_SERVER 	"localhost"
 #define DEF_MYSQL_USER 		"root"
 #define DEF_MYSQL_DB 		"smarthome"
