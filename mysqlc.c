@@ -1,3 +1,11 @@
+/* mysqlc.c
+//
+// Коннектор к MySql
+// Author: Mike Lapshov
+// Copyright (C) 2011-2016 Mike Lapshov
+*/
+
+
 #include <string.h>
 #include <stdlib.h>
 #include <mysql.h>

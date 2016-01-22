@@ -1,3 +1,9 @@
+/* main.c
+// 
+// Author: Mike Lapshov
+// Copyright (C) 2011-2016 Mike Lapshov
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>

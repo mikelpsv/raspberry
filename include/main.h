@@ -17,6 +17,4 @@ struct ds18b20 {
 };
 
 
-
-
 #endif
