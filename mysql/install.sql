@@ -30,6 +30,6 @@ CREATE TABLE `smarthome`.`devices` (
 
 CREATE TABLE `smarthome`.`sensor_data` (
   `date` DATETIME NOT NULL COMMENT '',
-  `device_id` INT NOT NULL COMMENT '',
-  `value` DECIMAL NULL COMMENT '');
+  `dev_id` VARCHAR(20) NOT NULL COMMENT '',
+  `value` FLOAT(7.3) NULL COMMENT '');
 
