@@ -179,13 +179,53 @@ int findDevices(struct ds18b20 *d) {
     dir = opendir(globalArgs.path_w1);
 	if (dir != NULL){
 		while ((dirent = readdir(dir))) {
-			// Файл должен быть ссылкой. Имя группы 28 старое, 10 новое
+			// Датчик температуры 1820 Файл должен быть ссылкой. Имя группы 28 старое, 10 новое
 	        // if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL) {
 			if ( (strstr(dirent->d_name, "28-") != NULL) || (strstr(dirent->d_name, "10-") != NULL)) {
 				newDev = malloc( sizeof(struct ds18b20) );
 	            strcpy(newDev->devID, dirent->d_name);
 	            // Assemble path to OneWire device
 	            sprintf(newDev->devPath, "%s/%s/w1_slave", globalArgs.path_w1, newDev->devID);
+	            i++;
+				newDev->next = 0;
+				d->next = newDev;
+				d = d->next;
+	        }
+			// Двухканальный ключ 2413. Имя группы 3a
+			// (DS2413)	2-channel addressable switch
+	        // if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "3a-") != NULL) {
+			if ( (strstr(dirent->d_name, "3a-") != NULL) || (strstr(dirent->d_name, "3a-") != NULL)) {
+				newDev = malloc( sizeof(struct ds18b20) );
+	            strcpy(newDev->devID, dirent->d_name);
+	            // Assemble path to OneWire device
+	            sprintf(newDev->devPath, "%s/%s/state", globalArgs.path_w1, newDev->devID);
+	            i++;
+				newDev->next = 0;
+				d->next = newDev;
+				d = d->next;
+	        }
+
+			// Двухканальный ключ 24.... Имя группы 12
+			// DS2406, DS2407¹	1Kb EPROM memory, 2-channel addressable switch
+	        // if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "12-") != NULL) {
+			if ( (strstr(dirent->d_name, "12-") != NULL) || (strstr(dirent->d_name, "12-") != NULL)) {
+				newDev = malloc( sizeof(struct ds18b20) );
+	            strcpy(newDev->devID, dirent->d_name);
+	            // Assemble path to OneWire device
+	            sprintf(newDev->devPath, "%s/%s/state", globalArgs.path_w1, newDev->devID);
+	            i++;
+				newDev->next = 0;
+				d->next = newDev;
+				d = d->next;
+	        }
+			// ключ 2408. Имя группы 29
+			// DS2408	8-channel addressable switch
+	        // if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "12-") != NULL) {
+			if ( (strstr(dirent->d_name, "29-") != NULL) || (strstr(dirent->d_name, "29-") != NULL)) {
+				newDev = malloc( sizeof(struct ds18b20) );
+	            strcpy(newDev->devID, dirent->d_name);
+	            // Assemble path to OneWire device
+	            sprintf(newDev->devPath, "%s/%s/state", globalArgs.path_w1, newDev->devID);
 	            i++;
 				newDev->next = 0;
 				d->next = newDev;
